@@ -35,20 +35,41 @@ function consistentRead(filename, callback) {
 }
 
 /*
- * Unleashing Zalgo. Now let's try to use this function as see what happens
+ * This function achieve asynchronous consistency by using process.nextTick() 
+ * to invoke the callback a little later asynchroniously
+ */
+
+function consistentReadAsync(filename, callback) {
+    if (cache[filename]) {
+        process.nextTick(function() {
+            callback(cache[filename]);
+        });
+    } else {
+        fs.readFile(filename,'utf8', function (err, data) {
+           cache[filename] = data;
+           callback(cache[filename]);
+        });
+    }
+}
+
+
+/*
+ * Reading the file using the defined api
  */
 
 function createFileReader(filename) {
    var listeners = [];
    var fileData;
 
-   consistentRead(filename, function(data) {
-        fileData = data;
+   consistentReadAsync(filename, function(data) {
+        listeners.forEach(function (listener) {
+            listener(data);
+        });
    });
 
    return {
         onDataReady : function (listener) {
-            listener(fileData);
+            listeners.push(listener);
         }
    };
 }
