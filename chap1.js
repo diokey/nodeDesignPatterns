@@ -6,7 +6,7 @@ var cache = {};
  * This is a bad implementation because this function behave sometime synchroniously and sometimes asynchroniously
  */
 
-function inconsistendRead(filename, callback) {
+function inconsistentRead(filename, callback) {
    
     if ( cache [ filename ]) {
         callback(cache[filename]);
@@ -22,21 +22,33 @@ function inconsistendRead(filename, callback) {
 }
 
 /*
+ * Unlike the function above,  this function sticks with a synchronous API. 
+ * 
+ */
+function consistentRead(filename, callback) {
+    if (cache[filename]) {
+        callback(cache[filename]);
+    }else {
+        cache[filename] = fs.readFileSync(filename, 'utf8');
+        callback(cache[filename]);
+    }
+}
+
+/*
  * Unleashing Zalgo. Now let's try to use this function as see what happens
  */
 
 function createFileReader(filename) {
    var listeners = [];
+   var fileData;
 
-   inconsistendRead(filename, function(data) {
-        listeners.forEach(function(listener) {
-            listener(data);
-        });
+   consistentRead(filename, function(data) {
+        fileData = data;
    });
 
    return {
         onDataReady : function (listener) {
-           listeners.push(listener);
+            listener(fileData);
         }
    };
 }
