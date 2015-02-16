@@ -1,0 +1,23 @@
+{
+  "name": "nodeDesignPatterns",
+  "version": "1.0.0",
+  "description": "",
+  "main": "chap1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diokey/nodeDesignPatterns.git"
+  },
+  "author": "diokey",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/diokey/nodeDesignPatterns/issues"
+  },
+  "homepage": "https://github.com/diokey/nodeDesignPatterns",
+  "dependencies": {
+    "mkdirp": "^0.5.0",
+    "request": "^2.53.0"
+  }
+}

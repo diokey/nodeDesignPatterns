@@ -82,7 +82,7 @@ reader1.onDataReady(function(data) {
     var reader2 = createFileReader('data.txt');
 
     reader2.onDataReady(function(data) {
-        console.log('The second call '+ data);
+      console.log('The second call '+ data);
     });
 });
 
