@@ -13,30 +13,34 @@ var utilities = {
   }
 };
 
+function saveFile(filename, body, callback) {
+  mkdirp(path.dirname(filename),function(err){
+    if (err) {
+      return callback(err);
+    }
+
+    fs.write(filename, body, function(err){
+      if (err) 
+        return callback(err);
+      callback(null, filename, true);
+    });
+  });  
+}
+
+function download(url,filename,callback) {
+  request(url, function (err, response, body) {
+    if (err)
+      return callback(err);
+    saveFile(filename, body, callback);
+  });
+}
+
 function spider(url, callback) {
   var filename = utilities.urlToFileName(url);
   fs.exists(filename, function (exists) { 
     if(!exists) {
       console.log('Downloading' + url);
-      request(url, function (err, response, body) {
-        if(err) {
-          callback(err);
-        } else {
-          mkdirp(path.dirname(filename), function (err) {
-            if(err) {
-              callback(err);
-            } else {
-              fs.writeFile(filename, body, function (err) {
-                if(err) {
-                  callback (err);
-                } else {
-                  callback(null, filename, true);
-                }
-              });
-            }
-          });
-        }
-      });
+      download(url, filename, callback);
     } else {
       callback(null, filename, false);
     }
