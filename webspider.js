@@ -19,9 +19,10 @@ function saveFile(filename, body, callback) {
       return callback(err);
     }
 
-    fs.write(filename, body, function(err){
-      if (err) 
+    fs.writeFile(filename, body, 'utf8', function(err){
+      if (err) {
         return callback(err);
+      } 
       callback(null, filename, true);
     });
   });  
