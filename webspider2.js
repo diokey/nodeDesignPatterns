@@ -1,3 +1,40 @@
+var fs = require('fs');
+var request = require('request');
+var mkdirp = require('mkdirp');
+var path = require('path');
+
+var utilities = {
+  urlToFileName : function (url) {
+    var re = /^(https:\/\/)?(www)?\.?(.*?)\.(?:com|au\.uk|co\.in*)(.*)$/; 
+    var m;
+    
+    m = re.exec(url);
+    return m.splice(3).join('');
+  }
+};
+
+function saveFile(filename, body, callback) {
+  mkdirp(path.dirname(filename),function(err){
+    if (err) {
+      return callback(err);
+    }
+
+    fs.writeFile(filename, body, 'utf8', function(err){
+      if (err) {
+        return callback(err);
+      } 
+      callback(null, filename, true);
+    });
+  });  
+}
+
+function download(url,filename,callback) {
+  request(url, function (err, response, body) {
+    if (err)
+      return callback(err);
+    saveFile(filename, body, callback);
+  });
+}
 
 function spiderLinks(currentUrl, body, nesting, callback) {
   if (nesting === 0) {
