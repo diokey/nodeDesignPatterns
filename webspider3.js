@@ -43,21 +43,31 @@ function spiderLinks(currentUrl, body, nesting, callback) {
   }
 
   var links = utilities.getPageLinks(currentUrl, body);
+  var completed = 0, errored = false;
 
-  function iterate(index) {
-    if (index === links.length) {
+  /*
+   * The done callback check wether the queued tasks have completed and
+   * call the final callback if that's the case
+   */
+  function done(err) {
+    if (err) {
+      errored = true;
+      return callback(err);
+    }
+    if (++completed === links.length && !errored) {
       return callback();
     }
-
-    spider(links[index], nesting -1, function(err) {
-      if (err) {
-        return callback(err);
-      }
-      iterate (index + 1);
-    });
   }
 
-  iterate(0);
+  /*
+   * We iteratate trough all links and start running them immediately
+   * The done callback is responsible for checking wether all tasks
+   * have completed successfully
+   */
+  links.forEach(function(link){
+    spider(link,nesting -1, done);
+  });
+
 }
 
 function spider(url, nesting, callback) {
