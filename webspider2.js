@@ -10,6 +10,8 @@ var utilities = {
     
     m = re.exec(url);
     return m.splice(3).join('');
+  },
+  getPageLinks : function (url, body) {
   }
 };
 
