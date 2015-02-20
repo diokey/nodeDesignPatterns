@@ -70,7 +70,17 @@ function spiderLinks(currentUrl, body, nesting, callback) {
 
 }
 
+var spiderLinksDownloaded = {};
+
 function spider(url, nesting, callback) {
+  /*
+   * Fix race condition that may happen if 2 proccess access the same url
+   */
+  if(spiderLinksDownloaded [url]) {
+    return callback(err);
+  }
+  //set this url to true to mean that it has already been treated
+  spiderLinksDownloaded[url] = true;
   var filename = utilities.urlToFilename(url);
   fs.readFile(filename, 'utf8', function(err, body) {
     if (err) {
