@@ -43,7 +43,17 @@ function spiderLinks(currentUrl, body, nesting, callback) {
   }
 
   var links = utilities.getPageLinks(currentUrl, body);
-  var completed = 0, errored = false;
+  var concurrency = 2, //we limit concurrency to 2
+  running = 0, completed = 0, index = 0;
+
+  function next() {
+    while (running < concurrency && index < links.length) {
+      spider(links[index++], nesting-1, done);
+      running++;
+    }
+  }
+
+  next();
 
   /*
    * The done callback check wether the queued tasks have completed and
@@ -58,16 +68,6 @@ function spiderLinks(currentUrl, body, nesting, callback) {
       return callback();
     }
   }
-
-  /*
-   * We iteratate trough all links and start running them immediately
-   * The done callback is responsible for checking wether all tasks
-   * have completed successfully
-   */
-  links.forEach(function(link){
-    spider(link,nesting -1, done);
-  });
-
 }
 
 var spiderLinksDownloaded = {};
