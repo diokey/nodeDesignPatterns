@@ -2,6 +2,7 @@ var fs = require('fs');
 var request = require('request');
 var mkdirp = require('mkdirp');
 var path = require('path');
+var cheerio = require('cherio');
 
 var utilities = {
   urlToFileName : function (url) {
