@@ -47,7 +47,7 @@ function spiderLinks(currentUrl, body, nesting, callback) {
 
   function iterate(index) {
     if (index === links.length) {
-      return callback();
+      return callback(null, true);
     }
 
     spider(links[index], nesting -1, function(err) {
@@ -79,3 +79,15 @@ function spider(url, nesting, callback) {
     spiderLinks(url, body, nesting, callback);
   });
 }
+
+
+spider(process.argv[2], 5, function(error, filename, downloaded) {
+  if ( error ) {
+    console.log('an error occured : ');
+    console.log(error);
+  } else {
+    if (downloaded) {
+      console.log('All files have Completed downloading');
+    }   
+  }
+});
