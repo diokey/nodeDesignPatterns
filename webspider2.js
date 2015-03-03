@@ -2,7 +2,7 @@ var fs = require('fs');
 var request = require('request');
 var mkdirp = require('mkdirp');
 var path = require('path');
-var cheerio = require('cherio');
+var cheerio = require('cheerio');
 
 var utilities = {
   urlToFileName : function (url) {
@@ -10,9 +10,22 @@ var utilities = {
     var m;
     
     m = re.exec(url);
-    return m.splice(3).join('');
+    return m.splice(3).join('') + '.html';
   },
-  getPageLinks : function (url, body) {
+  getPageLinks : function (url, body, nesting) {
+    nesting = nesting || 5;
+    var $ = cheerio.load(body);
+    var links = []; 
+    $('a').each(function(index, element) {
+       if (links.length <= nesting) {
+         var currentUrl = $(element).attr('href');
+         //use only url starting with https or www && check if it's not the same url
+         if (currentUrl && url != currentUrl && (currentUrl.indexOf("https") === 0 || currentUrl.indexOf("www") === 0 )) {
+            links.push(currentUrl);
+          }
+       }
+    }); 
+    return links;
   }
 };
 
@@ -26,15 +39,16 @@ function saveFile(filename, body, callback) {
       if (err) {
         return callback(err);
       } 
-      callback(null, filename, true);
+      callback(null, body, true);
     });
   });  
 }
 
 function download(url,filename,callback) {
   request(url, function (err, response, body) {
-    if (err)
+    if (err) {
       return callback(err);
+    }
     saveFile(filename, body, callback);
   });
 }
@@ -43,8 +57,7 @@ function spiderLinks(currentUrl, body, nesting, callback) {
   if (nesting === 0) {
     return process.nextTick(callback);
   }
-
-  var links = utilities.getPageLinks(currentUrl, body);
+  var links = utilities.getPageLinks(currentUrl, body, nesting);
 
   function iterate(index) {
     if (index === links.length) {
@@ -63,7 +76,7 @@ function spiderLinks(currentUrl, body, nesting, callback) {
 }
 
 function spider(url, nesting, callback) {
-  var filename = utilities.urlToFilename(url);
+  var filename = utilities.urlToFileName(url);
   fs.readFile(filename, 'utf8', function(err, body) {
     if (err) {
       if (err.code !== 'ENOENT') {
@@ -82,7 +95,7 @@ function spider(url, nesting, callback) {
 }
 
 
-spider(process.argv[2], 5, function(error, filename, downloaded) {
+spider(process.argv[2], 3, function(error, filename, downloaded) {
   if ( error ) {
     console.log('an error occured : ');
     console.log(error);
