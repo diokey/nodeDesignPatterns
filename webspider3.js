@@ -11,6 +11,19 @@ var utilities = {
     return m.splice(3).join('');
   },
   getPageLinks : function (url, body) {
+    nesting = nesting || 5;
+    var $ = cheerio.load(body);
+    var links = []; 
+    $('a').each(function(index, element) {
+       if (links.length <= nesting) {
+         var currentUrl = $(element).attr('href');
+         //use only url starting with https or www && check if it's not the same url
+         if (currentUrl && url != currentUrl && (currentUrl.indexOf("https") === 0 || currentUrl.indexOf("www") === 0 )) {
+            links.push(currentUrl);
+          }
+       }
+    }); 
+    return links;
   }
 };
 
@@ -31,8 +44,9 @@ function saveFile(filename, body, callback) {
 
 function download(url,filename,callback) {
   request(url, function (err, response, body) {
-    if (err)
+    if (err) {
       return callback(err);
+    }
     saveFile(filename, body, callback);
   });
 }
@@ -43,6 +57,9 @@ function spiderLinks(currentUrl, body, nesting, callback) {
   }
 
   var links = utilities.getPageLinks(currentUrl, body);
+  if (links.length === 0) {
+    return process.nextTick(callback);
+  }
   var completed = 0, errored = false;
 
   /*
@@ -55,7 +72,7 @@ function spiderLinks(currentUrl, body, nesting, callback) {
       return callback(err);
     }
     if (++completed === links.length && !errored) {
-      return callback();
+      return callback(null, null, true);
     }
   }
 
@@ -77,7 +94,7 @@ function spider(url, nesting, callback) {
    * Fix race condition that may happen if 2 proccess access the same url
    */
   if(spiderLinksDownloaded [url]) {
-    return callback(err);
+    return callback(null, null, true);
   }
   //set this url to true to mean that it has already been treated
   spiderLinksDownloaded[url] = true;
@@ -87,7 +104,7 @@ function spider(url, nesting, callback) {
       if (err.code !== 'ENOENT') {
         return callback(err);
       }
-
+      //if we can't read the file, download it first
       return download(url, filename, function (err, body) {
         if (err) {
           return callback(err);
@@ -98,3 +115,15 @@ function spider(url, nesting, callback) {
     spiderLinks(url, body, nesting, callback);
   });
 }
+
+
+spider(process.argv[2], 3, function(error, filename, downloaded) {
+  if ( error ) {
+    console.log('an error occured : ');
+    console.log(error);
+  } else {
+    if (downloaded) {
+      console.log('All files have Completed downloading');
+    }   
+  }
+});
